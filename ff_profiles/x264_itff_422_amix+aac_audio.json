@@ -1,0 +1,24 @@
+{
+  "inputs": [
+    {
+      "parameters": []
+    }
+  ],
+  "outputs": [
+    {
+      "parameters": [
+        "-c:v", "libx264", "-flags", "+ildct+ilme", "-x264opts", "tff=1", "-preset", "medium", "-pix_fmt", "yuv422p",
+        "-crf", "22", "-c:a", "aac", "-b:a", "128k", "-g", "25", "-bf", "4", "-filter_complex",
+        "[0:a]amix=inputs={{ input.a_streams|length }}:duration=first[mixed_audio];[0:v:0]setfield=mode=tff[video]",
+        "-map", "[video]", "-map", "[mixed_audio]"
+      ],
+      "filename": "{{ input.filename }}.mp4"
+    },
+    {
+      "parameters": [
+        "-c:a", "aac", "-b:a", "128k", "-map", "0:a"
+      ],
+      "filename": "{{ input.filename }}.m4a"
+    }
+  ]
+}

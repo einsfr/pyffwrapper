@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "parameters": []
+    }
+  ],
+  "outputs": [
+    {
+      "parameters": [
+        "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+        "-crf", "22", "-c:a", "aac", "-b:a", "128k", "-g", "25", "-bf", "4",
+        "-filter_complex", "[0:a]amerge=inputs={{ input.a_streams|length }}[aout];[0:v:0]yadif=mode=3:parity=1,mcdeint=mode=medium:parity=1[video]",
+        "-map", "[video]", "-map", "[aout]"
+      ],
+      "filename": "{{ input.filename }}.mp4"
+    }
+  ]
+}
