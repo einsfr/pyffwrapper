@@ -134,14 +134,16 @@ class FFmpegBaseCommand:
         finally:
             proc.wait()
             proc_end_time = datetime.now()
-            logging.info('FFmpeg process finished at {}. Elapsed time: {}'.format(
-                proc_end_time, proc_end_time - proc_start_time)
-            )
             return_code = proc.returncode
+            msg = 'FFmpeg process finished at {}. Elapsed time: {}. Exit code: {}'.format(
+                proc_end_time, proc_end_time - proc_start_time, return_code)
+
             if return_code != 0:
+                logging.warning(msg)
                 self._error_callback(
                     return_code, proc_log, proc_exception,
                     [t for t, o in output_mapping]
                 )
             else:
+                logging.info(msg)
                 self._success_callback(output_mapping, simulate)
