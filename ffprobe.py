@@ -51,9 +51,11 @@ class FFprobeBaseCommand:
             msg = 'FFprobe terminated with signal {}'.format(abs(proc.returncode))
             raise FFprobeTerminatedException(msg)
         else:
-            logging.error('Ffprobe exited with code {}'.format(proc.returncode))
-            logging.debug('Dumping stderr: {}'.format(proc.stderr.decode('utf-8')))
-            raise FFprobeProcessException()
+            log_err = 'Ffprobe exited with code {}'.format(proc.returncode)
+            log_debug = 'Dumping stderr: {}'.format(proc.stderr.decode('utf-8'))
+            logging.error(log_err)
+            logging.debug(log_debug)
+            raise FFprobeProcessException('{}. {}'.format(log_err, log_debug))
 
 
 class FFprobeFrameCommand(FFprobeBaseCommand):

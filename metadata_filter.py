@@ -3,7 +3,7 @@ import re
 
 from .metadata_collector import FFprobeMetadataCollector, FFprobeMetadataResult
 from .exceptions import UnknownFilterSelector, UnknownMetadataParameter, WrongConditionType, UnknownOperator,\
-    ConditionPairProcessingException, UnknownStreamType, StreamIndexOutOfRange
+    ConditionPairProcessingException, UnknownStreamType, StreamIndexOutOfRange, MetadataCollectionException
 from .factory import ffprobe_factory
 
 
@@ -20,7 +20,11 @@ class FFprobeMetadataFilter:
 
     def filter(self, input_url: str, filter_params: dict) -> bool:
         logging.debug('Filtering started with parameters: {}'.format(filter_params))
-        input_meta = self._ff_metadata_collector.get_metadata(input_url)
+        try:
+            input_meta = self._ff_metadata_collector.get_metadata(input_url)
+        except MetadataCollectionException:
+            logging.warning('Metadata collection error - filter failed')
+            return False
         for selector, selector_data in filter_params.items():
             logging.debug('Processing selector "{}"...'.format(selector))
             result = False

@@ -64,3 +64,9 @@ class UnknownStreamType(ValueError):
 
 class StreamIndexOutOfRange(ValueError):
     pass
+
+# FFprobeMetadataCollector
+
+
+class MetadataCollectionException(Exception):
+    pass

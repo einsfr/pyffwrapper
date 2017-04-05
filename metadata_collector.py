@@ -5,6 +5,7 @@ from .cache import HashCache, CacheMissException
 from .ffprobe import FFprobeInfoCommand
 from .field_mode_solver import FFprobeFieldModeSolver
 from .factory import ffprobe_factory
+from .exceptions import FFprobeProcessException, MetadataCollectionException
 
 
 class FFprobeMetadataResult:
@@ -92,10 +93,13 @@ class FFprobeMetadataCollector:
             pass
         else:
             return cached_value
-        result = FFprobeMetadataResult(
-            input_url,
-            self._ffprobe_info.exec(input_url, show_programs=False),
-            self._int_prog_solver
-        )
+        try:
+            result = FFprobeMetadataResult(
+                input_url,
+                self._ffprobe_info.exec(input_url, show_programs=False),
+                self._int_prog_solver
+            )
+        except FFprobeProcessException as e:
+            raise MetadataCollectionException from e
         self._cache.to_cache(input_url, result)
         return result
