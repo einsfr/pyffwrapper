@@ -8,8 +8,8 @@
     {
       "parameters": [
         "-c:v", "mpeg2video", "-c:a", "pcm_s16le", "-bf", "2", "-g", "12", "-pix_fmt", "yuv420p", "-qscale:v", "1",
-        "-qmin:v", "1", "-b:v", "35M", "-minrate", "35M", "-maxrate", "35M", "-bufsize", "35M", "-rc_init_occupancy",
-        "35M", "-sc_threshold", "1000000000", "-dc", "10", "-ar", "48000", "-color_primaries", "bt709", "-intra_vlc",
+        "-qmin:v", "1", "-b:v", "35M", "-minrate", "35M", "-maxrate", "35M", "-bufsize", "17825792", "-rc_init_occupancy",
+        "17825792", "-sc_threshold", "1000000000", "-dc", "10", "-ar", "48000", "-color_primaries", "bt709", "-intra_vlc",
         "1", "-flags", "+ildct+ilme", "-top", "1", "-vtag", "xdvc", "-rc_max_vbv_use", "1", "-rc_min_vbv_use", "1",
         "-aspect", "16:9", "-r", "25", "-filter_complex",
         "[0:v:0]scale=w=-1:h=1080:interl=-1,setfield=mode=tff;[0:a:0]channelsplit=channel_layout=stereo",
