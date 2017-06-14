@@ -12,7 +12,12 @@
         "17825792", "-sc_threshold", "1000000000", "-dc", "10", "-ar", "48000", "-color_primaries", "bt709", "-intra_vlc",
         "1", "-flags", "+ildct+ilme", "-top", "1", "-vtag", "xdvc", "-rc_max_vbv_use", "1", "-rc_min_vbv_use", "1",
         "-aspect", "16:9", "-r", "25", "-filter_complex",
-        "[0:v:0]scale=w=-1:h=1080:interl=-1,setfield=mode=tff;[0:a:0]channelsplit=channel_layout=stereo",
+        {% if input.get_field_mode(0) == 1 %}
+          {% set video_chain = "[0:v:0]scale=w=-1:h=1080:interl=-1,setfield=mode=tff" %}
+        {% elif input.get_field_mode(0) == 3 %}
+          {% set video_chain = "[0:v:0]scale=w=-1:h=1080,yadif=1:0:0,tinterlace=interleave_top,setfield=mode=tff" %}
+        {% endif %}
+        "{{ video_chain }};[0:a:0]channelsplit=channel_layout=stereo",
         "-f", "mxf", "-timecode", "00:00:00:00"
       ],
       "filename": "{{ input.filename }}.mxf"
