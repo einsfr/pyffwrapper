@@ -1,0 +1,30 @@
+{% set fm = input.get_field_mode(0) %}
+
+{
+  "inputs": [
+    {
+      "parameters": []
+    }
+  ],
+  "outputs": [
+    {
+      "parameters": [
+        "-c:v", "libx264",
+        {% if fm in [1, 2] %}
+        "-flags", "+ildct+ilme", "-x264opts",
+          {% if fm == 1 %}
+            "tff=1",
+          {% elif fm == 2 %}
+            "bff=1",
+          {% endif %}
+        {% endif %}
+        "-preset", "medium", "-pix_fmt", "yuv420p", "-crf", "22", "-g", "25", "-bf", "4",
+        "-c:a", "aac", "-b:a", "128k"
+        {% if fm in [1, 2] %}
+          ,"-filter_complex", "[0:v:0]setfield=mode={{ 'tff' if fm == 1 else 'bff' }}"
+        {% endif %}
+      ],
+      "filename": "{{ input.filename }}.mp4"
+    }
+  ]
+}

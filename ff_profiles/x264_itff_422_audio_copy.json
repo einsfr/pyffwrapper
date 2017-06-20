@@ -10,7 +10,7 @@
         "-c:v", "libx264", "-flags", "+ildct+ilme", "-x264opts", "tff=1", "-preset", "medium", "-pix_fmt", "yuv422p",
         "-crf", "22", "-c:a", "copy", "-g", "25", "-bf", "4",
         "-filter_complex", "[0:v:0]setfield=mode=tff[video]",
-        "-map", "[video]", "-map", "[0:a]"
+        "-map", "[video]", "-map", "0:a"
       ],
       "filename": "{{ input.filename }}.mp4"
     }
