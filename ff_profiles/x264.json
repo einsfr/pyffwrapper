@@ -1,4 +1,80 @@
-{% set fm = input.get_field_mode(0) %}
+{#
+  1 - tff
+  2 - bff
+  3 - progressive
+#}
+{% set _input_field_mode = input.get_field_mode(0) %}
+
+{#
+  'field_mode' - output field mode:
+    'tff' - top field first
+    'bff' - bottom field first
+    'p' - progressive
+    'auto' - same as input
+#}
+{% set field_mode = vars['field_mode'] if 'field_mode' in vars else 'auto' %}
+
+{% if field_mode == 'tff' or (field_mode == 'auto' and _input_field_mode == 1) %}
+  {% set _output_field_mode = 1 %}
+{% elif field_mode == 'bff' or (field_mode == 'auto' and _input_field_mode == 2) %}
+  {% set _output_field_mode = 2 %}
+{% else %}
+  {% set _output_field_mode = 3 %}
+{% endif %}
+
+{% if _input_field_mode == _output_field_mode %}
+  {% set _field_mode_conversion = 'none' %}
+{% else %}
+  {% if _input_field_mode == 1 %}
+    {% set _field_mode_conversion = 'tff to bff' if _output_field_mode == 2 else 'tff to p' %}
+  {% elif _input_field_mode == 2 %}
+    {% set _field_mode_conversion = 'bff to tff' if _output_field_mode == 1 else 'bff to p' %}
+  {% else %}
+    {% set _field_mode_conversion = 'p to tff' if _output_field_mode == 1 else 'p to bff' %}
+  {% endif %}
+{% endif %}
+
+{#
+  'x264_preset'
+#}
+{% set x264_preset = vars['x264_preset'] if 'x264_preset' in vars else 'medium' %}
+
+{#
+  'pix_fmt'
+#}
+{% set pix_fmt = vars['pix_fmt'] if 'pix_fmt' in vars else 'yuv420p' %}
+
+{#
+  'crf' - crf value
+#}
+{% set crf = vars['crf'] if 'crf' in vars else 22 %}
+
+{#
+  'audio_bw' - output audio bandwidth
+#}
+{% set audio_bw = vars['audio_bw'] if 'audio_bw' in vars else '128k' %}
+
+{#
+  'mcdeint_mode'
+#}
+{% set mcdeint_mode = vars['mcdeint_mode'] if 'mcdeint_mode' in vars else 'medium' %}
+
+{#
+  'frame_rate - output frame rate ("auto" for "same as input")
+#}
+{% set frame_rate = vars['frame_rate'] if 'frame_rate' in vars else 'auto' %}
+{% if frame_rate == 'auto' %}
+  {% set _output_frame_rate = input['v_streams'][0]['r_frame_rate'] %}
+{% else %}
+  {% set _output_frame_rate = frame_rate %}
+{% endif %}
+
+{% if _output_field_mode in [1, 2] or _field_mode_conversion != 'none' %}
+  {% set _video_filtering = True %}
+{% else %}
+  {% set _video_filtering = False %}
+{% endif %}
+{% set _audio_filtering = False %}
 
 {
   "inputs": [
@@ -10,19 +86,43 @@
     {
       "parameters": [
         "-c:v", "libx264",
-        {% if fm in [1, 2] %}
+        {% if _output_field_mode in [1, 2] %}
         "-flags", "+ildct+ilme", "-x264opts",
-          {% if fm == 1 %}
+          {% if _output_field_mode == 1 %}
             "tff=1",
-          {% elif fm == 2 %}
+          {% elif _output_field_mode == 2 %}
             "bff=1",
           {% endif %}
         {% endif %}
-        "-preset", "medium", "-pix_fmt", "yuv420p", "-crf", "22", "-g", "25", "-bf", "4",
-        "-c:a", "aac", "-b:a", "128k"
-        {% if fm in [1, 2] %}
-          ,"-filter_complex", "[0:v:0]setfield=mode={{ 'tff' if fm == 1 else 'bff' }}"
+        "-preset", "{{ x264_preset }}", "-pix_fmt", "{{ pix_fmt }}", "-crf", "{{ crf }}", "-g", "25", "-bf", "4",
+        "-c:a", "aac", "-b:a", "{{ audio_bw }}"
+        {% if _video_filtering or _audio_filtering %}
+          ,"-filter_complex",
+          {% if _video_filtering %}
+            {% if _field_mode_conversion == 'tff to bff' %}
+              {% set _fmc_chain = 'fieldorder=bff' %}
+            {% elif _field_mode_conversion == 'bff to tff' %}
+              {% set _fmc_chain = 'fieldorder=tff' %}
+            {% elif _field_mode_conversion in ['tff to p', 'bff to p'] %}
+              {% set _fmc_chain =
+                'yadif=mode=1:parity=' ~ (_input_field_mode - 1) ~
+                ',mcdeint=mode=' ~ mcdeint_mode ~ ':parity=' ~ (_input_field_mode - 1) %}
+            {% elif _field_mode_conversion in ['p to tff', 'p to bff'] %}
+              {% set _fmc_chain =
+                'yadif=mode=1:parity=0:deint=0,tinterlace=' ~
+                ('interleave_top' if _field_mode_conversion == 'p to tff' else 'interleave_bottom') %}
+            {% else %}
+              {% set _fmc_chain = '' %}
+            {% endif %}
+            {% if _output_field_mode in [1, 2] %}
+              {% set _set_field_chain = 'setfield=mode=' ~ 'tff' if _output_field_mode == 1 else 'bff' %}
+            {% else %}
+              {% set _set_field_chain = '' %}
+            {% endif %}
+            "[0:v:0]{{ _fmc_chain }}{% if _set_field_chain %},{{ _set_field_chain }}{% endif %}"
+          {% endif %}
         {% endif %}
+        ,"-r", "{{ _output_frame_rate }}"
       ],
       "filename": "{{ input.filename }}.mp4"
     }
