@@ -67,13 +67,13 @@ class FFprobeMetadataResult:
         return self._field_mode[stream_number]
 
     def __str__(self):
-        return {
+        return str({
             'a_streams': self.a_streams,
             'filename': self.filename,
             'filename_ext': self.filename_ext,
             'format': self.format,
             'v_streams': self.v_streams,
-        }
+        })
 
 
 class FFprobeMetadataCollector:
