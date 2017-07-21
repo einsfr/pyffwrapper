@@ -60,7 +60,7 @@
 {% set mcdeint_mode = vars['mcdeint_mode'] if 'mcdeint_mode' in vars else 'medium' %}
 
 {#
-  'frame_rate - output frame rate ("auto" for "same as input")
+  'frame_rate' - output frame rate ("auto" for "same as input")
 #}
 {% set frame_rate = vars['frame_rate'] if 'frame_rate' in vars else 'auto' %}
 {% if frame_rate == 'auto' %}
@@ -69,7 +69,12 @@
   {% set _output_frame_rate = frame_rate %}
 {% endif %}
 
-{% if _output_field_mode in [1, 2] or _field_mode_conversion != 'none' %}
+{#
+  'scale' - output scaling (value passed directly to scale filter)
+#}
+{% set scale = vars['scale'] if 'scale' in vars else 'none' %}
+
+{% if _output_field_mode in [1, 2] or _field_mode_conversion != 'none' or scale != 'none' %}
   {% set _video_filtering = True %}
 {% else %}
   {% set _video_filtering = False %}
@@ -115,11 +120,17 @@
               {% set _fmc_chain = '' %}
             {% endif %}
             {% if _output_field_mode in [1, 2] %}
-              {% set _set_field_chain = 'setfield=mode=' ~ 'tff' if _output_field_mode == 1 else 'bff' %}
+              {% set _set_field_chain = 'setfield=mode=' ~ ('tff' if _output_field_mode == 1 else 'bff') %}
             {% else %}
               {% set _set_field_chain = '' %}
             {% endif %}
-            "[0:v:0]{{ _fmc_chain }}{% if _set_field_chain %}{% if _fmc_chain %},{% endif %}{{ _set_field_chain }}{% endif %}"
+            {% if scale != 'none' %}
+              {% set _scale_chain = 'scale=' ~ scale ~ ':interl=' ~ ('1' if _output_field_mode in [1, 2] else '0') %}
+            {% else %}
+              {% set _scale_chain = '' %}
+            {% endif %}
+            {% set _v_filter_chains = [_fmc_chain, _scale_chain, _set_field_chain] %}
+            "[0:v:0]{{ _v_filter_chains|select|join(',') }}"
           {% endif %}
         {% endif %}
         ,"-r", "{{ _output_frame_rate }}"
