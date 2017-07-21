@@ -119,7 +119,7 @@
             {% else %}
               {% set _set_field_chain = '' %}
             {% endif %}
-            "[0:v:0]{{ _fmc_chain }}{% if _set_field_chain %},{{ _set_field_chain }}{% endif %}"
+            "[0:v:0]{{ _fmc_chain }}{% if _set_field_chain %}{% if _fmc_chain %},{% endif %}{{ _set_field_chain }}{% endif %}"
           {% endif %}
         {% endif %}
         ,"-r", "{{ _output_frame_rate }}"
